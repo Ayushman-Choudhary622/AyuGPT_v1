@@ -1,16 +1,7 @@
-export interface AIModel {
-  id: string;
-  name: string;
-  provider: "google" | "groq" | "openrouter";
-  description: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
 export const MODELS: AIModel[] = [
-  // ── Google Gemini ──────────────────────────────────────────
+  // ── Google Gemini ──────────────────────────
   {
-    id: "gemini-2.0-flash",
+    id: "gemini-2.0-flash-exp",
     name: "Gemini 2.0 Flash",
     provider: "google",
     description: "Latest Gemini — fast & multimodal",
@@ -31,7 +22,7 @@ export const MODELS: AIModel[] = [
     provider: "google",
     description: "Blazing fast Gemini for everyday use",
   },
-  // ── Groq (Free, Ultra-Fast) ────────────────────────────────
+  // ── Groq ───────────────────────────────────
   {
     id: "llama-3.3-70b-versatile",
     name: "Llama 3.3 70B",
@@ -60,7 +51,7 @@ export const MODELS: AIModel[] = [
     provider: "groq",
     description: "Mixture-of-experts, 32K context",
   },
-  // ── OpenRouter Free Models ─────────────────────────────────
+  // ── OpenRouter Free ────────────────────────
   {
     id: "mistralai/mistral-7b-instruct:free",
     name: "Mistral 7B",
@@ -94,9 +85,3 @@ export const MODELS: AIModel[] = [
     badgeColor: "from-pink-500 to-rose-500",
   },
 ];
-
-export const PROVIDER_META = {
-  google: { label: "Google Gemini", icon: "🔷", color: "text-blue-400" },
-  groq: { label: "Groq", icon: "⚡", color: "text-orange-400" },
-  openrouter: { label: "OpenRouter", icon: "🌐", color: "text-pink-400" },
-};
