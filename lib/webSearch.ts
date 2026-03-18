@@ -1,42 +1,8 @@
-/**
- * DuckDuckGo Web Search — No API key required.
- * Fetches the DuckDuckGo HTML page and parses result titles + snippets.
- */
 export async function webSearch(query: string): Promise<string> {
   const MAX_RESULTS = 4;
 
   try {
-    // First try DuckDuckGo Instant Answer API
-    const instantUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1&t=AyuGPT`;
-    const instantRes = await fetch(instantUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; AyuGPT/1.0)" },
-      signal: AbortSignal.timeout(6000),
-    });
-
-    if (instantRes.ok) {
-      const data = await instantRes.json();
-      const parts: string[] = [];
-
-      if (data.AbstractText) {
-        parts.push(`📖 **Summary:** ${data.AbstractText}`);
-      }
-      if (data.Answer) {
-        parts.push(`✅ **Direct Answer:** ${data.Answer}`);
-      }
-      if (data.RelatedTopics && data.RelatedTopics.length > 0) {
-        const topics = data.RelatedTopics.filter((t: { Text?: string }) => t.Text)
-          .slice(0, MAX_RESULTS)
-          .map((t: { Text: string; FirstURL?: string }) => `• ${t.Text}`);
-        if (topics.length > 0) {
-          parts.push(`🔗 **Related:**\n${topics.join("\n")}`);
-        }
-      }
-      if (parts.length > 0) {
-        return `🌐 **Web Search Results for: "${query}"**\n\n${parts.join("\n\n")}`;
-      }
-    }
-
-    // Fallback: scrape DuckDuckGo HTML
+    // Skip instant API (returns inconsistent JSON), go straight to HTML scrape
     const htmlUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
     const htmlRes = await fetch(htmlUrl, {
       headers: {
@@ -48,53 +14,45 @@ export async function webSearch(query: string): Promise<string> {
     });
 
     if (!htmlRes.ok) {
-      return `⚠️ Web search unavailable (status ${htmlRes.status}).`;
+      return "";
     }
 
     const html = await htmlRes.text();
     const results: string[] = [];
 
-    // Extract result blocks
-    const blockRegex = /<div class="result[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g;
-    const titleRx = /class="result__a"[^>]*>([^<]+)</;
-    const snippetRx = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/;
-    const urlRx = /class="result__url"[^>]*>([\s\S]*?)<\//;
+    const blockRegex =
+      /<a class="result__a"[^>]*>([^<]+)<\/a>[\s\S]*?<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
 
-    let block: RegExpExecArray | null;
+    let match: RegExpExecArray | null;
     let count = 0;
-    while ((block = blockRegex.exec(html)) !== null && count < MAX_RESULTS) {
-      const content = block[1];
-      const titleMatch = titleRx.exec(content);
-      const snippetMatch = snippetRx.exec(content);
-      const urlMatch = urlRx.exec(content);
 
-      const title = titleMatch
-        ? titleMatch[1].replace(/&amp;/g, "&").replace(/&quot;/g, '"').trim()
-        : null;
-      const snippet = snippetMatch
-        ? snippetMatch[1]
-            .replace(/<[^>]+>/g, "")
-            .replace(/&amp;/g, "&")
-            .replace(/&quot;/g, '"')
-            .trim()
-        : null;
-      const url = urlMatch ? urlMatch[1].replace(/<[^>]+>/g, "").trim() : null;
+    while ((match = blockRegex.exec(html)) !== null && count < MAX_RESULTS) {
+      const title = match[1]
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#x27;/g, "'")
+        .trim();
+      const snippet = match[2]
+        .replace(/<[^>]+>/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#x27;/g, "'")
+        .trim();
 
       if (title && snippet) {
-        results.push(
-          `**${title}**${url ? ` (${url})` : ""}\n${snippet}`
-        );
+        results.push(`**${title}**\n${snippet}`);
         count++;
       }
     }
 
     if (results.length > 0) {
-      return `🌐 **Web Search Results for: "${query}"**\n\n${results.join("\n\n---\n\n")}`;
+      return `🌐 Web Search Results for: "${query}"\n\n${results.join("\n\n---\n\n")}`;
     }
 
-    return `⚠️ No web results found for "${query}". Answering from training knowledge.`;
+    return "";
   } catch (err) {
+    // Silently fail — AI will answer from training data
     console.error("[webSearch] Error:", err);
-    return `⚠️ Web search timed out. Answering from training knowledge.`;
+    return "";
   }
 }
