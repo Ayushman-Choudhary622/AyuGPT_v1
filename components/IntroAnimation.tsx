@@ -79,15 +79,16 @@ export default function IntroAnimation({ onEnter }: Props) {
         >
           {/* Outer spinning ring */}
           <div className="logo-ring absolute inset-0 rounded-full"
-            style={{
-              width: 120, height: 120,
-              background: 'conic-gradient(from 0deg, transparent 0%, #7c3aed 25%, #06b6d4 50%, transparent 75%)',
-              borderRadius: '50%',
-              top: -10, left: -10, right: -10, bottom: -10,
-              width: 140, height: 140,
-              margin: 'auto',
-            }}
-          />
+  style={{
+    width: 140,
+    height: 140,
+    background: 'conic-gradient(from 0deg, transparent 0%, #7c3aed 25%, #06b6d4 50%, transparent 75%)',
+    borderRadius: '50%',
+    top: -10,
+    left: -10,
+    margin: 'auto',
+  }}
+/>
           <div
             className="relative flex items-center justify-center rounded-full"
             style={{
