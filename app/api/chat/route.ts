@@ -114,12 +114,12 @@ export async function POST(req: Request) {
 
     return result.toDataStreamResponse();
   } catch (error: unknown) {
-    console.error("[/api/chat] Error:", error);
     const message =
-      error instanceof Error ? error.message : "An unknown error occurred.";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+      error instanceof Error ? error.message : JSON.stringify(error);
+    console.error("[/api/chat] FULL ERROR:", message);
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }
