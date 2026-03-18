@@ -8,12 +8,13 @@ export interface AIModel {
 }
 
 export const MODELS: AIModel[] = [
+  // ── Google Gemini ──────────────────────────
   {
-    id: "gemini-2.0-flash-exp",
-    name: "Gemini 2.0 Flash",
+    id: "gemini-1.5-flash",
+    name: "Gemini 1.5 Flash",
     provider: "google",
-    description: "Latest Gemini — fast & multimodal",
-    badge: "NEWEST",
+    description: "Fast & capable — best for most tasks",
+    badge: "RECOMMENDED",
     badgeColor: "from-emerald-500 to-teal-500",
   },
   {
@@ -25,30 +26,31 @@ export const MODELS: AIModel[] = [
     badgeColor: "from-violet-500 to-purple-600",
   },
   {
-    id: "gemini-1.5-flash",
-    name: "Gemini 1.5 Flash",
+    id: "gemini-1.0-pro",
+    name: "Gemini 1.0 Pro",
     provider: "google",
-    description: "Blazing fast Gemini for everyday use",
+    description: "Stable Gemini model",
   },
+  // ── Groq ───────────────────────────────────
   {
     id: "llama-3.3-70b-versatile",
     name: "Llama 3.3 70B",
     provider: "groq",
-    description: "Top open-source LLM via Groq",
+    description: "Best open-source model via Groq",
     badge: "FAST",
     badgeColor: "from-orange-500 to-amber-500",
   },
   {
-    id: "llama3-70b-8192",
-    name: "Llama 3 70B",
+    id: "llama-3.1-70b-versatile",
+    name: "Llama 3.1 70B",
     provider: "groq",
-    description: "Meta's powerful Llama 3 model",
+    description: "Powerful Llama 3.1 model",
   },
   {
-    id: "llama3-8b-8192",
-    name: "Llama 3 8B Instant",
+    id: "llama-3.1-8b-instant",
+    name: "Llama 3.1 8B Instant",
     provider: "groq",
-    description: "Smallest Llama 3 — extremely fast",
+    description: "Ultra fast responses",
     badge: "INSTANT",
     badgeColor: "from-cyan-500 to-blue-500",
   },
@@ -58,11 +60,12 @@ export const MODELS: AIModel[] = [
     provider: "groq",
     description: "Mixture-of-experts, 32K context",
   },
+  // ── OpenRouter Free ────────────────────────
   {
     id: "mistralai/mistral-7b-instruct:free",
     name: "Mistral 7B",
     provider: "openrouter",
-    description: "Lightweight but mighty open model",
+    description: "Lightweight but mighty",
     badge: "FREE",
     badgeColor: "from-pink-500 to-rose-500",
   },
@@ -70,7 +73,7 @@ export const MODELS: AIModel[] = [
     id: "google/gemma-2-9b-it:free",
     name: "Gemma 2 9B",
     provider: "openrouter",
-    description: "Google's open Gemma 2 model",
+    description: "Google's open model",
     badge: "FREE",
     badgeColor: "from-pink-500 to-rose-500",
   },
@@ -78,7 +81,7 @@ export const MODELS: AIModel[] = [
     id: "meta-llama/llama-3.2-3b-instruct:free",
     name: "Llama 3.2 3B",
     provider: "openrouter",
-    description: "Ultra-compact free Llama model",
+    description: "Compact free Llama model",
     badge: "FREE",
     badgeColor: "from-pink-500 to-rose-500",
   },
