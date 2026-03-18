@@ -69,15 +69,18 @@ export async function POST(req: Request) {
     console.log("Provider resolved successfully, calling streamText...");
 
     const result = await streamText({
-      model: selectedModel,
-      system: SYSTEM_PROMPT,
-      messages,
-      temperature: 0.7,
-      maxTokens: 2048,
-    });
+  model: selectedModel,
+  system: SYSTEM_PROMPT,
+  messages,
+  temperature: 0.7,
+  maxTokens: 2048,
+});
 
-    console.log("streamText call succeeded for model:", model);
-    return result.toDataStreamResponse();
+result.text.then((t) =>
+  console.log("Response text preview:", model, "|", t?.slice(0, 80) || "EMPTY")
+);
+
+return result.toDataStreamResponse();
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
