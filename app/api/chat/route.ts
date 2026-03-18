@@ -24,28 +24,24 @@ function getProvider(model: string) {
   const groqKey = process.env.GROQ_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-  // Google Gemini
   if (model.startsWith("gemini")) {
     if (!googleKey) throw new Error("GEMINI_API_KEY is not set.");
     const google = createGoogleGenerativeAI({ apiKey: googleKey });
     return google(model);
   }
 
-  // Groq models
-  const groqModels = [
-    "llama",
-    "mixtral",
-    "gemma",
-    "whisper",
-    "deepseek",
-  ];
-  if (groqModels.some((prefix) => model.toLowerCase().startsWith(prefix))) {
+  if (
+    model.startsWith("llama") ||
+    model.startsWith("mixtral") ||
+    model.startsWith("whisper") ||
+    model.startsWith("deepseek")
+  ) {
     if (!groqKey) throw new Error("GROQ_API_KEY is not set.");
     const groq = createGroq({ apiKey: groqKey });
     return groq(model);
   }
 
-  // OpenRouter (handles all other models including free variants)
+  // Everything else → OpenRouter
   if (!openrouterKey) throw new Error("OPENROUTER_API_KEY is not set.");
   const openrouter = createOpenAI({
     baseURL: "https://openrouter.ai/api/v1",
