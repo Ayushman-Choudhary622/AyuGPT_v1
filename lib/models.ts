@@ -85,3 +85,8 @@ export const MODELS: AIModel[] = [
     badgeColor: "from-pink-500 to-rose-500",
   },
 ];
+export const PROVIDER_META = {
+  google: { label: "Google Gemini", icon: "🔷", color: "text-blue-400" },
+  groq: { label: "Groq", icon: "⚡", color: "text-orange-400" },
+  openrouter: { label: "OpenRouter", icon: "🌐", color: "text-pink-400" },
+};
