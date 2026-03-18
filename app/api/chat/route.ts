@@ -20,11 +20,18 @@ function getProvider(model: string) {
   console.log("OPENROUTER key exists:", !!openrouterKey, "| length:", openrouterKey?.length);
 
   if (model.startsWith("gemini")) {
-    console.log("Routing to: GOOGLE");
-    if (!googleKey) throw new Error("Gemini API key not found in environment.");
-    const google = createGoogleGenerativeAI({ apiKey: googleKey });
-    return google(model);
-  }
+  console.log("Routing to: GOOGLE");
+  if (!googleKey) throw new Error("Gemini API key not found in environment.");
+  const google = createGoogleGenerativeAI({ apiKey: googleKey });
+  return google(model, {
+    safetySettings: [
+      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+    ],
+  });
+}
 
   if (
     model.startsWith("llama") ||
@@ -74,6 +81,9 @@ export async function POST(req: Request) {
   messages,
   temperature: 0.7,
   maxTokens: 2048,
+  onFinish: ({ text, finishReason, usage }) => {
+    console.log("onFinish:", model, "| reason:", finishReason, "| tokens:", usage?.totalTokens, "| chars:", text?.length);
+  },
 });
 
 result.text.then((t) =>
