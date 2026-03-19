@@ -194,12 +194,12 @@ export async function POST(req: NextRequest) {
     // ── Groq ────────────────────────────────────
     // Groq models: llama-*, qwen/*, meta-llama/llama-4-*
     if (
-      modelId.startsWith("llama") ||
-      modelId.startsWith("qwen/") ||
-      modelId.startsWith("meta-llama/llama-4") ||
-      modelId.startsWith("moonshotai/") ||
-      modelId.startsWith("openai/gpt-oss")
-    ) {
+  modelId.startsWith("llama") ||
+  modelId.startsWith("qwen") ||
+  modelId.startsWith("meta-llama/llama-4") ||
+  modelId.startsWith("deepseek-r2") ||
+  modelId.startsWith("gemma2")
+  ) {
       console.log("→ Routing to Groq");
       return await streamOpenAICompat(
         "https://api.groq.com/openai/v1",
