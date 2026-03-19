@@ -31,7 +31,9 @@ function makeStream(
         await fn(controller);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        controller.enqueue(encoder.encode(`0:${JSON.stringify("⚠️ Error: " + msg)}\n`));
+        controller.enqueue(
+          encoder.encode(`0:${JSON.stringify("⚠️ Error: " + msg)}\n`)
+        );
       } finally {
         controller.enqueue(encoder.encode(`d:{"finishReason":"stop"}\n`));
         controller.close();
@@ -61,7 +63,10 @@ async function streamGemini(
         body: JSON.stringify({
           contents: [
             { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-            { role: "model", parts: [{ text: "Understood. I am AyuGPT, ready to help!" }] },
+            {
+              role: "model",
+              parts: [{ text: "Understood. I am AyuGPT, ready to help!" }],
+            },
             ...toGeminiFormat(messages),
           ],
           generationConfig: {
@@ -93,8 +98,10 @@ async function streamGemini(
         if (data === "[DONE]") continue;
         try {
           const json = JSON.parse(data);
-          const text = json.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          if (text) controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n`));
+          const text =
+            json.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          if (text)
+            controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n`));
         } catch {}
       }
     }
@@ -148,7 +155,8 @@ async function streamOpenAICompat(
         try {
           const json = JSON.parse(data);
           const text = json.choices?.[0]?.delta?.content || "";
-          if (text) controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n`));
+          if (text)
+            controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n`));
         } catch {}
       }
     }
@@ -165,10 +173,15 @@ export async function POST(req: NextRequest) {
     console.log("→ model:", modelId, "| msgs:", messages.length);
 
     if (!messages.length) {
-      return new Response(JSON.stringify({ error: "No messages." }), { status: 400 });
+      return new Response(JSON.stringify({ error: "No messages." }), {
+        status: 400,
+      });
     }
 
-    const geminiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || "";
+    const geminiKey =
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      "";
     const groqKey = process.env.GROQ_API_KEY || "";
     const orKey = process.env.OPENROUTER_API_KEY || "";
 
@@ -179,10 +192,13 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Groq ────────────────────────────────────
+    // Groq models: llama-*, qwen/*, meta-llama/llama-4-*
     if (
       modelId.startsWith("llama") ||
-      modelId.startsWith("mixtral") ||
-      modelId.startsWith("deepseek")
+      modelId.startsWith("qwen/") ||
+      modelId.startsWith("meta-llama/llama-4") ||
+      modelId.startsWith("moonshotai/") ||
+      modelId.startsWith("openai/gpt-oss")
     ) {
       console.log("→ Routing to Groq");
       return await streamOpenAICompat(
@@ -213,4 +229,4 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   }
-  }
+    }
