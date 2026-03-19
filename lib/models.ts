@@ -31,7 +31,7 @@ export const MODELS: AIModel[] = [
     provider: "google",
     description: "Reliable everyday Gemini",
   },
-  // ── Groq (latest production models) ────────
+  // ── Groq ───────────────────────────────────
   {
     id: "llama-3.3-70b-versatile",
     name: "Llama 3.3 70B",
@@ -52,7 +52,7 @@ export const MODELS: AIModel[] = [
     id: "meta-llama/llama-4-scout-17b-16e-instruct",
     name: "Llama 4 Scout 17B",
     provider: "groq",
-    description: "Latest Llama 4 multimodal model",
+    description: "Latest Llama 4 model",
     badge: "LATEST",
     badgeColor: "from-pink-500 to-rose-500",
   },
@@ -63,20 +63,12 @@ export const MODELS: AIModel[] = [
     description: "Llama 4 with 128 experts MoE",
   },
   {
-    id: "qwen/qwen-3-32b",
-    name: "Qwen 3 32B",
+    id: "qwen-qwq-32b",
+    name: "Qwen QwQ 32B",
     provider: "groq",
-    description: "Alibaba's powerful Qwen 3 model",
+    description: "Powerful reasoning model",
   },
   // ── OpenRouter Free ─────────────────────────
-  {
-    id: "openrouter/free",
-    name: "OpenRouter Auto Free",
-    provider: "openrouter",
-    description: "Auto picks best free model",
-    badge: "FREE",
-    badgeColor: "from-pink-500 to-rose-500",
-  },
   {
     id: "mistralai/mistral-7b-instruct:free",
     name: "Mistral 7B",
@@ -97,7 +89,15 @@ export const MODELS: AIModel[] = [
     id: "google/gemma-3-4b-it:free",
     name: "Gemma 3 4B",
     provider: "openrouter",
-    description: "Google's latest free Gemma model",
+    description: "Google latest free Gemma model",
+    badge: "FREE",
+    badgeColor: "from-pink-500 to-rose-500",
+  },
+  {
+    id: "deepseek/deepseek-r1:free",
+    name: "DeepSeek R1",
+    provider: "openrouter",
+    description: "Powerful free reasoning model",
     badge: "FREE",
     badgeColor: "from-pink-500 to-rose-500",
   },
