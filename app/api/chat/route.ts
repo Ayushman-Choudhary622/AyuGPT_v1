@@ -7,6 +7,20 @@ const SYSTEM_PROMPT = `You are AyuGPT, an advanced unified AI assistant created 
 
 type Message = { role: string; content: string };
 
+function toGeminiFormat(messages: Message[]) {
+  return messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+}
+
+function toOpenAIFormat(messages: Message[], system: string) {
+  return [
+    { role: "system", content: system },
+    ...messages.map((m) => ({ role: m.role, content: m.content })),
+  ];
+}
+
 function makeStream(
   fn: (controller: ReadableStreamDefaultController) => Promise<void>
 ): Response {
@@ -39,19 +53,17 @@ async function streamGemini(
 ): Promise<Response> {
   const encoder = new TextEncoder();
   return makeStream(async (controller) => {
-    const contents = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents,
+          contents: [
+            { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
+            { role: "model", parts: [{ text: "Understood. I am AyuGPT, ready to help!" }] },
+            ...toGeminiFormat(messages),
+          ],
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 2048,
@@ -107,10 +119,7 @@ async function streamOpenAICompat(
       },
       body: JSON.stringify({
         model,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
-        ],
+        messages: toOpenAIFormat(messages, SYSTEM_PROMPT),
         stream: true,
         temperature: 0.7,
         max_tokens: 2048,
@@ -163,15 +172,19 @@ export async function POST(req: NextRequest) {
     const groqKey = process.env.GROQ_API_KEY || "";
     const orKey = process.env.OPENROUTER_API_KEY || "";
 
+    // ── Gemini ──────────────────────────────────
     if (modelId.startsWith("gemini")) {
+      console.log("→ Routing to Gemini");
       return await streamGemini(modelId, messages, geminiKey);
     }
 
+    // ── Groq ────────────────────────────────────
     if (
       modelId.startsWith("llama") ||
       modelId.startsWith("mixtral") ||
       modelId.startsWith("deepseek")
     ) {
+      console.log("→ Routing to Groq");
       return await streamOpenAICompat(
         "https://api.groq.com/openai/v1",
         modelId,
@@ -180,6 +193,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── OpenRouter ──────────────────────────────
+    console.log("→ Routing to OpenRouter");
     return await streamOpenAICompat(
       "https://openrouter.ai/api/v1",
       modelId,
@@ -198,4 +213,4 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   }
-          }
+  }
