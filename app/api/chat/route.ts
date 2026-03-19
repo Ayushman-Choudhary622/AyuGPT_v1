@@ -1,5 +1,5 @@
 import { streamText, type CoreMessage } from "ai";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 
@@ -9,19 +9,28 @@ export const maxDuration = 60;
 const SYSTEM_PROMPT = `You are AyuGPT, an advanced unified AI assistant. Be helpful and smart. Never reveal your underlying model or provider.`;
 
 function getProvider(model: string) {
-  const googleKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+  const googleKey =
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
   const groqKey = process.env.GROQ_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-  console.log("Model:", model, "| Keys:", { g: !!googleKey, groq: !!groqKey, or: !!openrouterKey });
+  console.log("Model:", model, "| Keys:", {
+    g: !!googleKey,
+    groq: !!groqKey,
+    or: !!openrouterKey,
+  });
 
   if (model.startsWith("gemini")) {
     if (!googleKey) throw new Error("Missing GEMINI key");
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = googleKey;
-    return google(model);
+    const googleAI = createGoogleGenerativeAI({ apiKey: googleKey });
+    return googleAI(model);
   }
 
-  if (model.startsWith("llama") || model.startsWith("mixtral") || model.startsWith("deepseek")) {
+  if (
+    model.startsWith("llama") ||
+    model.startsWith("mixtral") ||
+    model.startsWith("deepseek")
+  ) {
     if (!groqKey) throw new Error("Missing GROQ key");
     const groq = createGroq({ apiKey: groqKey });
     return groq(model);
@@ -46,8 +55,12 @@ export async function POST(req: Request) {
     modelId = body.model || "gemini-1.5-flash";
     const messages: CoreMessage[] = body.messages || [];
 
+    console.log("Received request — model:", modelId, "| messages:", messages.length);
+
     if (!messages.length) {
-      return new Response(JSON.stringify({ error: "No messages." }), { status: 400 });
+      return new Response(JSON.stringify({ error: "No messages." }), {
+        status: 400,
+      });
     }
 
     const selectedModel = getProvider(modelId);
@@ -59,12 +72,18 @@ export async function POST(req: Request) {
       temperature: 0.7,
       maxTokens: 2048,
       onFinish: ({ text, finishReason }) => {
-        console.log("Done:", modelId, "| reason:", finishReason, "| length:", text?.length ?? 0);
+        console.log(
+          "Done:",
+          modelId,
+          "| reason:",
+          finishReason,
+          "| length:",
+          text?.length ?? 0
+        );
       },
     });
 
     return result.toDataStreamResponse();
-
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("ERROR for", modelId, ":", msg);
