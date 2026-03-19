@@ -7,20 +7,6 @@ const SYSTEM_PROMPT = `You are AyuGPT, an advanced unified AI assistant created 
 
 type Message = { role: string; content: string };
 
-function toOpenAIFormat(messages: Message[], system: string) {
-  return [
-    { role: "system", content: system },
-    ...messages.map((m) => ({ role: m.role, content: m.content })),
-  ];
-}
-
-function toGeminiFormat(messages: Message[]) {
-  return messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
-}
-
 function makeStream(
   fn: (controller: ReadableStreamDefaultController) => Promise<void>
 ): Response {
@@ -46,25 +32,37 @@ function makeStream(
   });
 }
 
-async function streamGemini(model: string, messages: Message[], apiKey: string): Promise<Response> {
+async function streamGemini(
+  model: string,
+  messages: Message[],
+  apiKey: string
+): Promise<Response> {
   const encoder = new TextEncoder();
   return makeStream(async (controller) => {
+    const contents = messages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`,
+      `https://generativelanguage.googleapis.com/v1/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: toGeminiFormat(messages),
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+          contents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          },
         }),
       }
     );
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`Gemini ${res.status}: ${err.slice(0, 200)}`);
+      throw new Error(`Gemini ${res.status}: ${err.slice(0, 300)}`);
     }
 
     const reader = res.body!.getReader();
@@ -109,7 +107,10 @@ async function streamOpenAICompat(
       },
       body: JSON.stringify({
         model,
-        messages: toOpenAIFormat(messages, SYSTEM_PROMPT),
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ],
         stream: true,
         temperature: 0.7,
         max_tokens: 2048,
@@ -118,7 +119,7 @@ async function streamOpenAICompat(
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`API ${res.status}: ${err.slice(0, 200)}`);
+      throw new Error(`API ${res.status}: ${err.slice(0, 300)}`);
     }
 
     const reader = res.body!.getReader();
@@ -146,10 +147,10 @@ async function streamOpenAICompat(
 }
 
 export async function POST(req: NextRequest) {
-  let modelId = "gemini-1.5-flash";
+  let modelId = "gemini-2.0-flash";
   try {
     const body = await req.json();
-    modelId = body.model || "gemini-1.5-flash";
+    modelId = body.model || "gemini-2.0-flash";
     const messages: Message[] = body.messages || [];
 
     console.log("→ model:", modelId, "| msgs:", messages.length);
@@ -162,19 +163,15 @@ export async function POST(req: NextRequest) {
     const groqKey = process.env.GROQ_API_KEY || "";
     const orKey = process.env.OPENROUTER_API_KEY || "";
 
-    // ── Gemini ────────────────────────────────
     if (modelId.startsWith("gemini")) {
-      console.log("→ Gemini direct API");
       return await streamGemini(modelId, messages, geminiKey);
     }
 
-    // ── Groq ──────────────────────────────────
     if (
       modelId.startsWith("llama") ||
       modelId.startsWith("mixtral") ||
       modelId.startsWith("deepseek")
     ) {
-      console.log("→ Groq direct API");
       return await streamOpenAICompat(
         "https://api.groq.com/openai/v1",
         modelId,
@@ -183,8 +180,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── OpenRouter ────────────────────────────
-    console.log("→ OpenRouter direct API");
     return await streamOpenAICompat(
       "https://openrouter.ai/api/v1",
       modelId,
@@ -203,4 +198,4 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
     });
   }
-      }
+          }
