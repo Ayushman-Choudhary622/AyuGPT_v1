@@ -195,10 +195,8 @@ export async function POST(req: NextRequest) {
     // Groq models: llama-*, qwen/*, meta-llama/llama-4-*
     if (
   modelId.startsWith("llama") ||
-  modelId.startsWith("qwen") ||
-  modelId.startsWith("meta-llama/llama-4") ||
-  modelId.startsWith("deepseek-r2") ||
-  modelId.startsWith("gemma2")
+  modelId.startsWith("gemma2") ||
+  modelId.startsWith("meta-llama/llama-4")
   ) {
       console.log("→ Routing to Groq");
       return await streamOpenAICompat(
